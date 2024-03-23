@@ -1,33 +1,29 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import './App.css';
 
-const BuscadorPokemon = () => {
+const PokemonFinder = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     let timeoutId;
 
-    const fetchData = async () => {
+    const fetchPokemonData = async () => {
       if (searchTerm.trim() !== '') {
-        setIsLoading(true);
+        setLoading(true);
         try {
-          const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${searchTerm.toLowerCase()}`);
-          if (response.ok) {
-            const data = await response.json();
-            setSearchResults([data]);
-            setError(null);
-          } else {
-            setSearchResults([]);
-            setError('No se encontraron resultados.');
-          }
+          const response = await axios.get(`https://pokeapi.co/api/v2/pokemon/${searchTerm.toLowerCase()}`);
+          const data = response.data;
+          setSearchResults([data]);
+          setError(null);
         } catch (error) {
           console.error('Error fetching data:', error);
-          setError('Hubo un problema al buscar el Pokémon. Por favor, inténtalo de nuevo.');
+          setError('Ha ocurrido un error buscando el pokemon');
         } finally {
-          setIsLoading(false);
+          setLoading(false);
         }
       } else {
         setSearchResults([]);
@@ -37,31 +33,31 @@ const BuscadorPokemon = () => {
 
     clearTimeout(timeoutId);
     if (searchTerm.trim() !== '') {
-      timeoutId = setTimeout(fetchData, 500); // Espera 500ms después de que el usuario deja de escribir
+      timeoutId = setTimeout(fetchPokemonData, 500); 
     }
 
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
-  const handleChange = (e) => {
+  const handleSearchTermChange = (e) => {
     setSearchTerm(e.target.value);
   };
 
   return (
-    <div className="buscador-container">
+    <div className="pokemon-search-container">
       <h2>Buscador de Pokémon</h2>
       <form onSubmit={(e) => e.preventDefault()}>
         <input
           type="text"
           placeholder="Ingrese el nombre del Pokémon"
           value={searchTerm}
-          onChange={handleChange}
+          onChange={handleSearchTermChange}
         />
       </form>
-      {isLoading && <p>Cargando...</p>}
+      {loading && <p>Cargando...</p>}
       {error && <p>{error}</p>}
-      {searchResults.length > 0 && !isLoading && !error && (
-        <div className="resultado-container">
+      {searchResults.length > 0 && !loading && !error && (
+        <div className="pokemon-result-container">
           {searchResults.map((pokemon) => (
             <div key={pokemon.id} className="pokemon-card">
               <img src={pokemon.sprites.front_default} alt={pokemon.name} />
@@ -74,4 +70,4 @@ const BuscadorPokemon = () => {
   );
 };
 
-export default BuscadorPokemon;
+export default PokemonFinder;
